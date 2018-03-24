@@ -1,0 +1,9 @@
+-include("d.hrl").
+
+-record(world, {carrots, rabbits, wolves, width, height}).
+
+-record(carrot, {pid, pos, amount = ?FRESH}).
+-record(rabbit, {pid, pos, direction, belly}).
+-record(wolf, {pid, pos, direction, belly, target}).
+
+-record(pos, {x,y}).
