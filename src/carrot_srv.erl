@@ -26,11 +26,18 @@ handle_call(grab, _From, Carrot) ->
 handle_call(bite, _From, Carrot) ->
     case Carrot#carrot.amount of
         ?BITE ->
-            {stop, normal,finished, Carrot};
+                        {reply, {leftovers, 0}, 
+             Carrot#carrot{pid = self(), 
+                           pos = Carrot#carrot.pos,
+                           amount = 0,
+                           grabbed = true}};
         _ ->
-            io:format("~p~n",["still something to eat"]),
             Amount = Carrot#carrot.amount - ?BITE,
-            {reply, {leftovers,Amount}, Carrot#carrot{amount = Amount}}
+            {reply, {leftovers,Amount}, 
+             Carrot#carrot{pid = self(), 
+                           pos = Carrot#carrot.pos,
+                           amount = Amount,
+                           grabbed = true}}
     end;
 
 handle_call(terminate, _From, Carrot) ->

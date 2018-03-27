@@ -1,6 +1,6 @@
 -module(sim_lib).
 -include("../include/m.hrl").
--export([gen_pos/1,equal/2, gen_dir/1, directions/0, next_pos/2]).
+-export([gen_pos/1,equal/2, gen_dir/1, directions/0, next_pos/2, turn/1]).
 
 gen_pos(random) ->
     Param = set:world(),
@@ -18,6 +18,22 @@ directions() ->
 gen_dir(random) ->
     element(rand:uniform(7)+1, directions()).
 
+turn(n) ->
+    s;
+turn(s) ->
+    n;
+turn(w) ->
+    e;
+turn(e) ->
+    w;
+turn(nw) ->
+    se;
+turn(ne) ->
+    sw;
+turn(sw) ->
+    ne;
+turn(se) ->
+    nw.
 next_pos(Position, Direction) ->
     {X,Y} = {Position#pos.x, Position#pos.y},
     Param = set:world(),
