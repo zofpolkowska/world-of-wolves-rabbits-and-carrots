@@ -23,14 +23,14 @@ init([]) ->
                shutdown => brutal_kill,
                type => supervisor,
                modules => [world_sup]},
-    Controllers = #{id => ctrl,
-               start => {ctrl, start_link, []},
-               restart => permanent,
-               shutdown => brutal_kill,
-               type => worker,
-               modules => [ctrl]},
+    %Controllers = #{id => ctrl,
+    %           start => {ctrl, start_link, []},
+    %           restart => permanent,
+    %           shutdown => brutal_kill,
+    %           type => worker,
+    %           modules => [ctrl]},
 
-    {ok, {Flags, [World,Controllers]}}.
+    {ok, {Flags, [World]}}.
 
 
 %%====================================================================
