@@ -1,6 +1,6 @@
 -module(sim_lib).
 -include("../include/m.hrl").
--export([gen_pos/1,equal/2, gen_dir/1, directions/0, next_pos/2, turn/1]).
+-export([gen_pos/1,equal/2, gen_dir/1, directions/0, next_pos/2, turn/1, g/0]).
 
 gen_pos(random) ->
     Param = set:world(),
@@ -58,3 +58,9 @@ next_pos(Position, Direction) ->
         _ ->
             Position
     end.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+g() ->
+    carrots_sup:start_link(15),
+    carrots_sup:plant(15),
+    rabbit_statem:start_link(sim_lib:gen_pos(random)).

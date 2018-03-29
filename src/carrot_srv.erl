@@ -2,43 +2,32 @@
 -include("../include/m.hrl").
 -behaviour(gen_server).
 
--export([start_link/0]).
+-export([start_link/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
-start_link() ->
-    gen_server:start_link(?MODULE, [], []).
+start_link(Position) ->
+    gen_server:start_link(?MODULE, [Position], []).
 
-init([]) ->
+init([Position]) ->
+    erlang:register(list_to_atom("carrot" ++ pid_to_list(self())), self()),
     Carrot = #carrot{ pid = self(),
-                      pos = sim_lib:gen_pos(random)},
+                      position = Position },
     {ok, Carrot}.
 
-handle_call(position, _From, Carrot) ->
-    Reply = Carrot#carrot.pos,
-    {reply, Reply, Carrot};
-handle_call(amount, _From, Carrot) ->
-    Reply = Carrot#carrot.amount,
-    {reply, Reply, Carrot};
-handle_call(grab, _From, Carrot) ->
-    Reply = Carrot#carrot.grabbed,
-    {reply, Reply, Carrot#carrot{grabbed = true}};    
+handle_call(bite, _From, Carrot) when Carrot#carrot.amount > 0 ->
+    Left = Carrot#carrot.amount - ?BITE,
+    {reply, Left, 
+     Carrot#carrot{amount = Left}};
+
 handle_call(bite, _From, Carrot) ->
-    case Carrot#carrot.amount of
-        ?BITE ->
-                        {reply, {leftovers, 0}, 
-             Carrot#carrot{pid = self(), 
-                           pos = Carrot#carrot.pos,
-                           amount = 0,
-                           grabbed = true}};
-        _ ->
-            Amount = Carrot#carrot.amount - ?BITE,
-            {reply, {leftovers,Amount}, 
-             Carrot#carrot{pid = self(), 
-                           pos = Carrot#carrot.pos,
-                           amount = Amount,
-                           grabbed = true}}
-    end;
+    {stop, normal,nothing, Carrot};
+
+handle_call(amount, _From, Carrot) ->
+    {reply, Carrot#carrot.amount, Carrot};
+
+handle_call(position, _From, Carrot) ->
+    {reply, Carrot#carrot.position, Carrot};
 
 handle_call(terminate, _From, Carrot) ->
     {stop, normal,ok, Carrot}.
@@ -56,7 +45,3 @@ terminate(_Reason, _Carrot) ->
 
 code_change(_OldVsn, Carrot, _Extra) ->
     {ok, Carrot}.
-
-%%%===================================================================
-%%% Internal functions
-%%%===================================================================

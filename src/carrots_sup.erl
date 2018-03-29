@@ -2,40 +2,29 @@
 -include("../include/m.hrl").
 -behaviour(supervisor).
 
--export([start_link/0]).
+-export([start_link/1, plant/1]).
 
 -export([init/1]).
 
--export([plant/0, children/0]).
+start_link(Parameters) ->
+    supervisor:start_link({local, ?MODULE}, ?MODULE, [Parameters]).
 
-start_link() ->
-    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+init([Parameters]) ->
+%    {ok, {{simple_one_for_one, 3, 60},
+%         [{carrot,
+%           {carrot_srv, start_link, []},
+%           temporary, 1000, worker, [carrot_srv]}
+%         ]}}.
+    {ok, {{one_for_one, Parameters, 1}, []}}. 
 
-init([]) ->
-    Param = set:world(),
-    Flags = #{strategy => one_for_one,
-                 intensity => Param#world.carrots,
-                 period => 1},
-
-    {ok, {Flags, []}}.
-
-%%%===================================================================%%%
-
-plant() ->
-    Param = set:world(),
-    [carrot(Counter) || Counter <- lists:seq(1,Param#world.carrots)].
-
-carrot(Counter) ->
-   Carrot =  #{id => {carrot,Counter},
-               start => {carrot_srv, start_link, []},
-               restart => temporary,
-               shutdown => brutal_kill,
-               type => worker,
-               modules => [carrot_srv]},
-    {ok,Pid} = supervisor:start_child(?MODULE, Carrot),
-    Pid.
-
-children() ->
-    Ans = supervisor:which_children(?MODULE),
-    [Pid || {_,Pid,_,_} <- Ans].
+plant(Parameters) ->
+    [supervisor:start_child(?MODULE,
+                            single({carrot,E})) || E <- lists:seq(1,Parameters)].
+single(E) ->
+    {E,
+     {carrot_srv, start_link, [sim_lib:gen_pos(random)]},
+     temporary,
+     brutal_kill,
+     worker,
+     [carrot_srv]}.
 

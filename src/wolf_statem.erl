@@ -14,7 +14,7 @@ callback_mode() -> state_functions.
 
 init([]) ->
     Wolf = #wolf{ pid = self(),
-                  pos = sim_lib:gen_pos(random),
+                  position = sim_lib:gen_pos(random),
                   direction = sim_lib:gen_dir(random),
                   belly = ?HUNGRY},
     {ok, state_name, Wolf}.
