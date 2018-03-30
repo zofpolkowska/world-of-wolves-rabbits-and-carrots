@@ -3,37 +3,39 @@
 
 -behaviour(supervisor).
 
--export([start_link/0]).
+-export([start_link/1]).
 -export([init/1]).
--export([breed/0]).
+-export([breed/1,last/0]).
 
 
-start_link() ->
-    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+start_link(Parameters) ->
+    supervisor:start_link({local, ?MODULE}, ?MODULE, [Parameters]).
 
-init([]) ->
-    Param = set:world(),
-    Flags = #{strategy => one_for_one,
-                 intensity => Param#world.rabbits,
-                 period => 1},
-
-    {ok, {Flags, []}}.
+init([Parameters]) ->
+    sim_event:notify(ready),
+    {ok, {{one_for_one, Parameters#world.rabbits, 1}, []}}.
 
 %%%===================================================================%%%
-breed() ->
-    Param = set:world(),
-    [rabbit(Counter) || Counter <- lists:seq(1,Param#world.rabbits)].
+breed(Parameters) ->
+    [supervisor:start_child(?MODULE,
+                            single({rabbit,E})) || E <- lists:seq(1,Parameters)],
+    sim_event:notify(ready).
+single(E) ->
+    {E,
+     {rabbit_statem, start_link, [sim_lib:gen_pos(random)]},
+     temporary,
+     brutal_kill,
+     worker,
+     [rabbit_statem]}.
 
-rabbit(Counter) ->
-   Rabbit =  #{id => {rabbit,Counter},
-               start => {rabbit_statem, start_link, []},
-               restart => temporary,
-               shutdown => brutal_kill,
-               type => worker,
-               modules => [rabbit_statem]},
-    {ok,Pid} = supervisor:start_child(?MODULE, Rabbit),
-    Pid.
+last() ->
+    Ids = [Id || {{rabbit,Id},_,_,_} <- supervisor:which_children(?MODULE)],
+    lists:foldl(fun (X,Max) -> if X > Max -> X;
+                                  true -> Max end end, 0, Ids).
+    
 
+    
+    
 
 
 

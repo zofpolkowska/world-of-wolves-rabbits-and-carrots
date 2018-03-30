@@ -15,7 +15,8 @@
 %%====================================================================
 
 start(_StartType, _StartArgs) ->
-    sim_sup:start_link().
+    Parameters = set:world(),
+    sim_sup:start_link(Parameters).
 
 %%--------------------------------------------------------------------
 stop(_State) ->

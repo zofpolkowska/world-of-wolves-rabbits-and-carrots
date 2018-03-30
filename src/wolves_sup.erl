@@ -3,37 +3,36 @@
 
 -behaviour(supervisor).
 
--export([start_link/0]).
+-export([start_link/1]).
 -export([init/1]).
--export([breed/0]).
+-export([breed/1]).
 
-start_link() ->
-    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+start_link(Parameters) ->
+    supervisor:start_link({local, ?MODULE}, ?MODULE, [Parameters]).
 
-init([]) ->
-    Param = set:world(),
+init([Parameters]) ->
+        sim_event:notify(ready),
     Flags = #{strategy => one_for_one,
-                 intensity => Param#world.wolves,
+                 intensity => Parameters#world.wolves,
                  period => 1},
 
     {ok, {Flags, []}}.
 %%%===================================================================%%%
-breed() ->
-    Param = set:world(),
-    [wolf(Counter) || Counter <- lists:seq(1,Param#world.wolves)].
+breed(Parameters) ->
+    [supervisor:start_child(?MODULE,
+                            single({wolf,E})) || E <- lists:seq(1,Parameters)].
 
-wolf(Counter) ->
-   Wolf =  #{id => {wolf,Counter},
-               start => {wolf_statem, start_link, []},
-               restart => temporary,
-               shutdown => brutal_kill,
-               type => worker,
-               modules => [wolf_statem]},
-    {ok,Pid} = supervisor:start_child(?MODULE, Wolf),
-    Pid.
+single(E) ->
+    {E,
+     {wolf_statem, start_link, [sim_lib:gen_pos(random)]},
+     temporary,
+     brutal_kill,
+     worker,
+     [wolf_statem]}.
 
-
-
-
+last() ->
+    Ids = [Id || {{wolf,Id},_,_,_} <- supervisor:which_children(?MODULE)],
+    lists:foldl(fun (X,Max) -> if X > Max -> X;
+                                  true -> Max end end, 0, Ids).
 
 

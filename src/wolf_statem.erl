@@ -2,19 +2,19 @@
 -include("../include/m.hrl").
 -behaviour(gen_statem).
 
--export([start_link/0]).
+-export([start_link/1]).
 -export([callback_mode/0, init/1, terminate/3, code_change/4]).
 -export([state_name/3]).
 
-start_link() ->
-    gen_statem:start_link(?MODULE, [], []).
+start_link(Position) ->
+    gen_statem:start_link(?MODULE, [Position], []).
 
 callback_mode() -> state_functions.
 
 
-init([]) ->
+init([Position]) ->
     Wolf = #wolf{ pid = self(),
-                  pos = sim_lib:gen_pos(random),
+                  position = Position,
                   direction = sim_lib:gen_dir(random),
                   belly = ?HUNGRY},
     {ok, state_name, Wolf}.
