@@ -5,7 +5,7 @@
 
 -export([start_link/1]).
 -export([init/1]).
--export([breed/1]).
+-export([breed/1, last/0, split/1, kill/1]).
 
 start_link(Parameters) ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, [Parameters]).
@@ -36,3 +36,17 @@ last() ->
                                   true -> Max end end, 0, Ids).
 
 
+split(Wolf) ->
+    D = Wolf#wolf.direction,
+    P = sim_lib:next_pos(Wolf#wolf.position, D),
+    supervisor:start_child(?MODULE,
+                           {last()+1,
+                            {wolf_statem, start_link, [P,D]},
+                            temporary,
+                            brutal_kill,
+                            worker,
+                            [wolf_statem]}).
+
+
+kill(Wolf) ->
+    gen_statem:stop(Wolf#wolf.pid).

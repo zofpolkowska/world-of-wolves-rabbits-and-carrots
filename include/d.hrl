@@ -1,10 +1,10 @@
 %common
 -define(HUNGRY, 0).
-
+-define(MAX_NO_FOOD, 6000).
 %wolf 
 -define(FULL_WOLF, 2).
 -define(RABBIT, 1).
-
+-define(NOSE, 4).
 %rabbit
 -define(FULL_RABBIT, 4).
 -define(JUMP, 1000).

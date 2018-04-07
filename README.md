@@ -6,7 +6,7 @@ An OTP application
 Build & Run
 -----
 
-    $ rebar3 compile
-    $ erl -pa _build/default/lib/sim/ebin
+    $ cd sim
+    $ ./sim.sh
     $ application:start(sim)
     
