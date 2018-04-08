@@ -31,31 +31,30 @@ init([Position, Direction]) ->
 
 
 running(state_timeout, run, Wolf)->
-    if
-        Wolf#wolf.no_food > ?MAX_NO_FOOD ->
+    case Wolf#wolf.no_food of
+        ?MAX_NO_FOOD ->
             wolves_sup:kill(Wolf);
-        true ->
+        _ ->
             Time = Wolf#wolf.no_food + ?HOP,
             WolfPos = Wolf#wolf.position,
             try hunt(Wolf#wolf.position) of
+                failure ->
+                    {next_state, running, 
+                     Wolf#wolf{no_food = 
+                                   Time,
+                               position = 
+                                   sim_lib:next_pos(WolfPos, Wolf#wolf.direction)},
+                     [{state_timeout,?HOP,run}]};
                 Rabbit ->
                     {next_state, chasing, Wolf#wolf{target = Rabbit, no_food = 0}, 
                      [{state_timeout,?HOP,chase}]}
             catch
-                _ ->
+                _:_ ->
                     {next_state, running, 
-                     Wolf#wolf{no_food = Time,
-                               position = sim_lib:next_pos(WolfPos, Wolf#wolf.direction)}, 
-                     [{state_timeout,?HOP,running}]};
-                exit:_Exit ->
-                    {next_state, running, 
-                     Wolf#wolf{no_food = Time,
-                               position = sim_lib:next_pos(WolfPos,Wolf#wolf.direction)}, 
-                     [{state_timeout,?HOP,run}]};
-                error:_Error ->
-                    {next_state, running,
-                     Wolf#wolf{no_food = Time,
-                               position = sim_lib:next_pos(WolfPos,Wolf#wolf.direction)}, 
+                     Wolf#wolf{no_food = 
+                                   Time,
+                               position = 
+                                   sim_lib:next_pos(WolfPos, Wolf#wolf.direction)},
                      [{state_timeout,?HOP,run}]}
             end
     end.
@@ -69,12 +68,7 @@ chasing(state_timeout, chase, Wolf) ->
         true ->
             {next_state, eating, Wolf, [{state_timeout, ?HOP, eat}]}
     catch
-        exit:_Exit ->
-            {next_state, running, 
-             Wolf#wolf{direction = Direction,
-                       position = sim_lib:next_pos(WolfPos,Direction)}, 
-                         [{state_timeout,?HOP,chase}]};
-        _ ->
+        _:_ ->
             {next_state, chasing, 
              Wolf#wolf{direction = Direction,
                        position = sim_lib:next_pos(WolfPos,Direction)}, 
@@ -94,15 +88,9 @@ eating(state_timeout, eat, Wolf) ->
                [{state_timeout,?HOP,run}]}
             end
     catch
-        _ ->
+        _:_ ->
             {next_state, running, Wolf#wolf{target=undefined}, 
-             [{state_timeout,?HOP,run}]};
-        exit:_Exit ->
-              {next_state, running, Wolf#wolf{target=undefined}, 
-               [{state_timeout,?HOP,run}]};
-        error:_Error ->
-              {next_state, running, Wolf#wolf{belly=Belly+1, target=undefined}, 
-               [{state_timeout,?HOP,run}]}
+             [{state_timeout,?HOP,run}]}
     end.
 
 splitting(state_timeout, split, Wolf) ->
@@ -128,7 +116,7 @@ hunt(Position) ->
          [Pid|| {_,Pid,_,_} <- supervisor:which_children(rabbits_sup)]).
 
 hunt(_, []) ->
-    throw(failure);
+     failure;
 hunt(Position, [H|T]) ->
     try gen_statem:call(H,{distance, Position}) of
         true ->
@@ -136,8 +124,8 @@ hunt(Position, [H|T]) ->
         false ->
             hunt(Position, T)
     catch
-        _ ->
-             throw(failure)
+        _:_ ->
+             failure
     end.
 
 

@@ -67,11 +67,7 @@ jumping(state_timeout, jump,  Rabbit) ->
                      Rabbit#rabbit{carrot = Carrot, no_food = 0}, 
                      [{state_timeout,500,eat}]}
             catch
-                exit:_Exit ->
-                    NPos = sim_lib:next_pos(Rabbit#rabbit.position,Rabbit#rabbit.direction),
-                    {next_state, jumping,Rabbit#rabbit{position = NPos, no_food = Time}, 
-                     [{state_timeout,500,jump}]};
-                _ ->
+                _:_ ->
                     NPos = sim_lib:next_pos(Rabbit#rabbit.position,Rabbit#rabbit.direction),
                     case sim_lib:equal(Rabbit#rabbit.position, NPos) of
                         true ->
@@ -109,7 +105,7 @@ eating(state_timeout, eat, Rabbit) ->
                          Rabbit#rabbit{belly = Belly, carrot = no}, 
                          [{state_timeout,?JUMP,jump}]}
                 end;
-            _ ->
+            _:_ ->
                 {next_state, jumping, Rabbit, [{state_timeout,?JUMP,jump}]}  
 
         end.
